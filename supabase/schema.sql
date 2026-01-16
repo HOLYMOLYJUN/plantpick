@@ -31,3 +31,54 @@ CREATE POLICY "Allow public update access" ON public.sessions
   USING (true)
   WITH CHECK (true);
 
+-- 식물 테이블 생성
+CREATE TABLE IF NOT EXISTS public.plants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT NOT NULL REFERENCES public.sessions(session_id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('sunflower', 'azalea', 'rose', 'tulip')),
+  name TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_cared_at TIMESTAMPTZ,
+  is_mature BOOLEAN NOT NULL DEFAULT false,
+  is_exchanged BOOLEAN NOT NULL DEFAULT false,
+  exchanged_at TIMESTAMPTZ,
+  CONSTRAINT plants_session_id_unique UNIQUE (session_id)
+);
+
+-- 인덱스 생성
+CREATE INDEX IF NOT EXISTS idx_plants_session_id ON public.plants(session_id);
+CREATE INDEX IF NOT EXISTS idx_plants_created_at ON public.plants(created_at DESC);
+
+-- RLS 정책 설정
+ALTER TABLE public.plants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access" ON public.plants
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert access" ON public.plants
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update access" ON public.plants
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+-- 케어 기록 테이블 생성
+CREATE TABLE IF NOT EXISTS public.care_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  plant_id UUID NOT NULL REFERENCES public.plants(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('water', 'fertilizer', 'sunlight', 'wind')),
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 인덱스 생성
+CREATE INDEX IF NOT EXISTS idx_care_records_plant_id ON public.care_records(plant_id);
+CREATE INDEX IF NOT EXISTS idx_care_records_timestamp ON public.care_records(timestamp DESC);
+
+-- RLS 정책 설정
+ALTER TABLE public.care_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access" ON public.care_records
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert access" ON public.care_records
+  FOR INSERT WITH CHECK (true);
+

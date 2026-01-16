@@ -2,22 +2,72 @@
 
 import { useRouter } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getSessionId } from "@/lib/session";
 
 export default function GrowPage() {
   const router = useRouter();
-  const { selectedPlant, getCurrentPlant } = usePlantStore();
+  const { selectedPlant, getCurrentPlant, addPlant, setSelectedPlant } =
+    usePlantStore();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 식물 데이터 로드
+    const loadPlant = async () => {
+      const sessionId = getSessionId();
+      if (!sessionId) {
+        router.push("/select");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/plants?sessionId=${sessionId}`);
+        const data = await response.json();
+
+        if (data.success && data.plant) {
+          // 서버에서 받은 식물 데이터를 스토어에 저장
+          const plant = {
+            id: data.plant.id,
+            type: data.plant.type,
+            name: data.plant.name,
+            createdAt: new Date(data.plant.createdAt),
+            lastCaredAt: data.plant.lastCaredAt
+              ? new Date(data.plant.lastCaredAt)
+              : null,
+            careHistory: data.plant.careHistory.map((record: any) => ({
+              type: record.type,
+              timestamp: new Date(record.timestamp),
+            })),
+            isMature: data.plant.isMature,
+            isExchanged: data.plant.isExchanged,
+          };
+          setSelectedPlant(plant.type);
+          addPlant(plant);
+        } else {
+          // 식물이 없으면 선택 페이지로 리다이렉트
+          router.push("/select");
+        }
+      } catch (error) {
+        console.error("식물 데이터 로드 오류:", error);
+        router.push("/select");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPlant();
+  }, [router, addPlant, setSelectedPlant]);
 
   useEffect(() => {
     // 식물이 선택되지 않은 경우 선택 페이지로 리다이렉트
-    if (!selectedPlant || !getCurrentPlant()) {
+    if (!isLoading && (!selectedPlant || !getCurrentPlant())) {
       router.push("/select");
     }
-  }, [selectedPlant, getCurrentPlant, router]);
+  }, [selectedPlant, getCurrentPlant, router, isLoading]);
 
   const plant = getCurrentPlant();
 
-  if (!plant) {
+  if (isLoading || !plant) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <div className="text-center">

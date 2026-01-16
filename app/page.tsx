@@ -11,8 +11,8 @@ export default function HomePage() {
   const { selectedPlant, getCurrentPlant } = usePlantStore();
 
   useEffect(() => {
-    // 세션 ID 초기화 및 서버 등록
-    const registerSession = async () => {
+    // 세션 ID 초기화 및 서버 등록, 식물 데이터 로드
+    const initializeSession = async () => {
       // 1순위: localStorage에 저장된 기존 세션 ID 사용 (같은 기기에서 재방문 시)
       let sessionId = getSessionId();
       
@@ -38,13 +38,41 @@ export default function HomePage() {
           },
           body: JSON.stringify({ sessionId }),
         });
+
+        // 세션 ID로 식물 데이터 로드
+        const plantResponse = await fetch(`/api/plants?sessionId=${sessionId}`);
+        const plantData = await plantResponse.json();
+
+        if (plantData.success && plantData.plant) {
+          // 서버에서 받은 식물 데이터를 스토어에 저장
+          const { addPlant, setSelectedPlant } = usePlantStore.getState();
+          const plant = {
+            id: plantData.plant.id,
+            type: plantData.plant.type,
+            name: plantData.plant.name,
+            createdAt: new Date(plantData.plant.createdAt),
+            lastCaredAt: plantData.plant.lastCaredAt
+              ? new Date(plantData.plant.lastCaredAt)
+              : null,
+            careHistory: plantData.plant.careHistory.map((record: any) => ({
+              type: record.type,
+              timestamp: new Date(record.timestamp),
+            })),
+            isMature: plantData.plant.isMature,
+            isExchanged: plantData.plant.isExchanged,
+          };
+          setSelectedPlant(plant.type);
+          addPlant(plant);
+        }
       } catch (error) {
-        console.error("세션 등록 오류:", error);
+        console.error("세션/식물 데이터 로드 오류:", error);
       }
     };
 
-    registerSession();
+    initializeSession();
+  }, []);
 
+  useEffect(() => {
     // 이미 식물을 선택한 경우 키우기 페이지로 리다이렉트
     if (selectedPlant && getCurrentPlant()) {
       router.push("/grow");

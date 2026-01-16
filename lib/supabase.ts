@@ -37,6 +37,61 @@ export interface Database {
           last_accessed_at?: string | null;
         };
       };
+      plants: {
+        Row: {
+          id: string;
+          session_id: string;
+          type: "sunflower" | "azalea" | "rose" | "tulip";
+          name: string;
+          created_at: string;
+          last_cared_at: string | null;
+          is_mature: boolean;
+          is_exchanged: boolean;
+          exchanged_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          type: "sunflower" | "azalea" | "rose" | "tulip";
+          name: string;
+          created_at?: string;
+          last_cared_at?: string | null;
+          is_mature?: boolean;
+          is_exchanged?: boolean;
+          exchanged_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          type?: "sunflower" | "azalea" | "rose" | "tulip";
+          name?: string;
+          created_at?: string;
+          last_cared_at?: string | null;
+          is_mature?: boolean;
+          is_exchanged?: boolean;
+          exchanged_at?: string | null;
+        };
+      };
+      care_records: {
+        Row: {
+          id: string;
+          plant_id: string;
+          type: "water" | "fertilizer" | "sunlight" | "wind";
+          timestamp: string;
+        };
+        Insert: {
+          id?: string;
+          plant_id: string;
+          type: "water" | "fertilizer" | "sunlight" | "wind";
+          timestamp?: string;
+        };
+        Update: {
+          id?: string;
+          plant_id?: string;
+          type?: "water" | "fertilizer" | "sunlight" | "wind";
+          timestamp?: string;
+        };
+      };
     };
   };
 }
