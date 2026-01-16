@@ -2,12 +2,51 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
 /**
- * 세션 ID로 식물 조회
+ * 세션 ID로 식물 조회 또는 통계 조회
  */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const stats = searchParams.get("stats");
     const sessionId = searchParams.get("sessionId");
+
+    // 통계 조회 (관리자용)
+    if (stats === "true") {
+      const { count, error } = await supabase
+        .from("plants")
+        .select("*", { count: "exact", head: true });
+
+      if (error) {
+        console.error("Supabase 식물 통계 조회 오류:", error);
+        return NextResponse.json(
+          { success: false, error: "식물 통계 조회에 실패했습니다." },
+          { status: 500 }
+        );
+      }
+
+      // 식물 타입별 통계
+      const { data: plantsByType, error: typeError } = await supabase
+        .from("plants")
+        .select("type");
+
+      if (typeError) {
+        console.error("Supabase 식물 타입별 통계 조회 오류:", typeError);
+      }
+
+      const typeStats = (plantsByType || []).reduce(
+        (acc, plant) => {
+          acc[plant.type] = (acc[plant.type] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
+      return NextResponse.json({
+        success: true,
+        count: count || 0,
+        typeStats,
+      });
+    }
 
     if (!sessionId) {
       return NextResponse.json(
