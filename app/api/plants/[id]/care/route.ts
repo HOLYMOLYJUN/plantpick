@@ -6,10 +6,10 @@ import { supabase } from "@/lib/supabase";
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const plantId = params.id;
+    const { id: plantId } = await params;
     const { type } = await request.json();
 
     if (!type || !["water", "fertilizer", "sunlight", "wind"].includes(type)) {
