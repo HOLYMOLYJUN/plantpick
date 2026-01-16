@@ -24,16 +24,16 @@ export async function GET(request: Request) {
         );
       }
 
-      // 식물 타입별 통계
-      const { data: plantsByType, error: typeError } = await supabase
+      // 식물 타입별 통계 및 상태 통계
+      const { data: plantsData, error: typeError } = await supabase
         .from("plants")
-        .select("type");
+        .select("type, is_mature, is_exchanged");
 
       if (typeError) {
-        console.error("Supabase 식물 타입별 통계 조회 오류:", typeError);
+        console.error("Supabase 식물 통계 조회 오류:", typeError);
       }
 
-      const typeStats = (plantsByType || []).reduce(
+      const typeStats = (plantsData || []).reduce(
         (acc, plant) => {
           acc[plant.type] = (acc[plant.type] || 0) + 1;
           return acc;
@@ -41,10 +41,16 @@ export async function GET(request: Request) {
         {} as Record<string, number>
       );
 
+      // 성체 수 및 교환 완료 수 계산
+      const matureCount = (plantsData || []).filter((plant) => plant.is_mature).length;
+      const exchangedCount = (plantsData || []).filter((plant) => plant.is_exchanged).length;
+
       return NextResponse.json({
         success: true,
         count: count || 0,
         typeStats,
+        matureCount,
+        exchangedCount,
       });
     }
 

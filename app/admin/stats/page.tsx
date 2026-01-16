@@ -21,6 +21,8 @@ interface PlantStats {
     rose?: number;
     tulip?: number;
   };
+  matureCount?: number;
+  exchangedCount?: number;
 }
 
 // 세션 통계 fetch 함수
@@ -213,6 +215,32 @@ export default function AdminStatsPage() {
                       </p>
                     </div>
                     <div className="text-4xl">🌱</div>
+                  </div>
+                </div>
+
+                {/* 성체 및 교환 통계 */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-purple-700 mb-1">성체</p>
+                        <p className="text-2xl font-bold text-purple-900">
+                          {plantStats.matureCount || 0}개
+                        </p>
+                      </div>
+                      <div className="text-2xl">✨</div>
+                    </div>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-green-700 mb-1">교환 완료</p>
+                        <p className="text-2xl font-bold text-green-900">
+                          {plantStats.exchangedCount || 0}개
+                        </p>
+                      </div>
+                      <div className="text-2xl">🌸</div>
+                    </div>
                   </div>
                 </div>
 
