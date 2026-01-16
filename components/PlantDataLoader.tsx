@@ -12,7 +12,7 @@ import type { PlantType, CareType } from "@/types/plant";
  * 앱 초기화 시 세션 등록 및 식물 데이터 로드
  */
 export function PlantDataLoader() {
-  const { addPlant, setSelectedPlant } = usePlantStore();
+  const { addPlant, setSelectedPlant, updatePlant, getCurrentPlant } = usePlantStore();
 
   // 세션 ID 결정
   const sessionId = useMemo(() => {
@@ -57,7 +57,7 @@ export function PlantDataLoader() {
   }, [sessionId]);
 
   useEffect(() => {
-    // 식물 데이터가 로드되면 스토어에 저장
+    // 식물 데이터가 로드되면 스토어에 저장 또는 업데이트
     if (plantData?.plant) {
       const plant = {
         id: plantData.plant.id,
@@ -75,9 +75,16 @@ export function PlantDataLoader() {
         isExchanged: plantData.plant.isExchanged,
       };
       setSelectedPlant(plant.type);
-      addPlant(plant);
+      
+      // 이미 같은 ID의 식물이 있으면 업데이트, 없으면 추가
+      const existingPlant = getCurrentPlant();
+      if (existingPlant && existingPlant.id === plant.id) {
+        updatePlant(plant.id, plant);
+      } else {
+        addPlant(plant);
+      }
     }
-  }, [plantData, addPlant, setSelectedPlant]);
+  }, [plantData, addPlant, setSelectedPlant, updatePlant, getCurrentPlant]);
 
   // 이 컴포넌트는 UI를 렌더링하지 않음
   return null;

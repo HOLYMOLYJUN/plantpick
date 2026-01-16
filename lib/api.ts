@@ -65,3 +65,43 @@ export const createPlant = async (params: CreatePlantParams): Promise<{ plant: P
   return { plant: data.plant };
 };
 
+// 케어 기록 추가
+export interface AddCareParams {
+  plantId: string;
+  type: "water" | "fertilizer" | "sunlight" | "wind";
+}
+
+export const addCare = async (params: AddCareParams): Promise<{ careRecord: { type: string; timestamp: string }; becameMature?: boolean }> => {
+  const response = await fetch(`/api/plants/${params.plantId}/care`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type: params.type }),
+  });
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.error || "케어 기록 추가에 실패했습니다.");
+  }
+  return { careRecord: data.careRecord, becameMature: data.becameMature };
+};
+
+// 식물 교환
+export interface ExchangePlantParams {
+  plantId: string;
+}
+
+export const exchangePlant = async (params: ExchangePlantParams): Promise<{ exchangedAt: string }> => {
+  const response = await fetch(`/api/plants/${params.plantId}/exchange`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await response.json();
+  if (!data.success) {
+    throw new Error(data.error || "교환 처리에 실패했습니다.");
+  }
+  return { exchangedAt: data.exchangedAt };
+};
+
