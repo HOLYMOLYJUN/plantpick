@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
 import { motion } from "framer-motion";
 import { getOrCreateSessionId, getSessionIdFromUrl } from "@/lib/session";
 
 export default function HomePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { selectedPlant, getCurrentPlant } = usePlantStore();
 
   useEffect(() => {
