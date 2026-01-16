@@ -4,73 +4,10 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
 import { motion } from "framer-motion";
-import { getOrCreateSessionId, getSessionId, getSessionIdFromUrl } from "@/lib/session";
 
 export default function HomePage() {
   const router = useRouter();
   const { selectedPlant, getCurrentPlant } = usePlantStore();
-
-  useEffect(() => {
-    // 세션 ID 초기화 및 서버 등록, 식물 데이터 로드
-    const initializeSession = async () => {
-      // 1순위: localStorage에 저장된 기존 세션 ID 사용 (같은 기기에서 재방문 시)
-      let sessionId = getSessionId();
-      
-      // 2순위: URL 파라미터에서 sessionId 확인 (QR 코드로 접속한 경우)
-      const urlSessionId = getSessionIdFromUrl();
-      if (urlSessionId) {
-        sessionId = urlSessionId;
-        // URL의 sessionId를 localStorage에 저장하여 다음 방문 시 재사용
-        localStorage.setItem("plantpick-session-id", sessionId);
-      }
-      
-      // 3순위: 없으면 새로 생성
-      if (!sessionId) {
-        sessionId = getOrCreateSessionId();
-      }
-
-      // 서버에 세션 ID 등록 (기존 세션이면 업데이트, 새 세션이면 생성)
-      try {
-        await fetch("/api/sessions", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sessionId }),
-        });
-
-        // 세션 ID로 식물 데이터 로드
-        const plantResponse = await fetch(`/api/plants?sessionId=${sessionId}`);
-        const plantData = await plantResponse.json();
-
-        if (plantData.success && plantData.plant) {
-          // 서버에서 받은 식물 데이터를 스토어에 저장
-          const { addPlant, setSelectedPlant } = usePlantStore.getState();
-          const plant = {
-            id: plantData.plant.id,
-            type: plantData.plant.type,
-            name: plantData.plant.name,
-            createdAt: new Date(plantData.plant.createdAt),
-            lastCaredAt: plantData.plant.lastCaredAt
-              ? new Date(plantData.plant.lastCaredAt)
-              : null,
-            careHistory: plantData.plant.careHistory.map((record: any) => ({
-              type: record.type,
-              timestamp: new Date(record.timestamp),
-            })),
-            isMature: plantData.plant.isMature,
-            isExchanged: plantData.plant.isExchanged,
-          };
-          setSelectedPlant(plant.type);
-          addPlant(plant);
-        }
-      } catch (error) {
-        console.error("세션/식물 데이터 로드 오류:", error);
-      }
-    };
-
-    initializeSession();
-  }, []);
 
   useEffect(() => {
     // 이미 식물을 선택한 경우 키우기 페이지로 리다이렉트

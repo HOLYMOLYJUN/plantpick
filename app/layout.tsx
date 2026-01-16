@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
+import { PlantDataLoader } from "@/components/PlantDataLoader";
 
 export const metadata: Metadata = {
   title: "PlantPick - 식물 키우기",
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <PlantDataLoader />
+          {children}
+        </Providers>
       </body>
     </html>
   );

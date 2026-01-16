@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
 import { motion } from "framer-motion";
-import type { PlantType } from "@/types/plant";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { PlantType, CareType } from "@/types/plant";
 import type { PlantConfig } from "@/types/plant";
 import { getSessionId } from "@/lib/session";
+import { createPlant } from "@/lib/api";
 
 interface PlantSelectClientProps {
   plants: PlantConfig[];
@@ -14,41 +16,20 @@ interface PlantSelectClientProps {
 
 export function PlantSelectClient({ plants }: PlantSelectClientProps) {
   const router = useRouter();
-  const { setSelectedPlant, addPlant } = usePlantStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const { setSelectedPlant, addPlant, getCurrentPlant } = usePlantStore();
+  const queryClient = useQueryClient();
 
-  const handleSelectPlant = async (plantType: PlantType) => {
-    const config = plants.find((p) => p.type === plantType);
-    if (!config) return;
-
-    const sessionId = getSessionId();
-    if (!sessionId) {
-      alert("세션 ID를 찾을 수 없습니다. 페이지를 새로고침해주세요.");
-      return;
+  useEffect(() => {
+    // 이미 식물이 선택되어 있으면 키우기 페이지로 리다이렉트
+    if (getCurrentPlant()) {
+      router.push("/grow");
     }
+  }, [getCurrentPlant, router]);
 
-    setIsLoading(true);
-
-    try {
-      // 서버에 식물 생성
-      const response = await fetch("/api/plants", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sessionId,
-          type: plantType,
-          name: config.name,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || "식물 생성에 실패했습니다.");
-      }
-
+  // 식물 생성 mutation
+  const createPlantMutation = useMutation({
+    mutationFn: createPlant,
+    onSuccess: (data) => {
       // 서버에서 받은 식물 데이터를 스토어에 저장
       const newPlant = {
         id: data.plant.id,
@@ -58,29 +39,51 @@ export function PlantSelectClient({ plants }: PlantSelectClientProps) {
         lastCaredAt: data.plant.lastCaredAt
           ? new Date(data.plant.lastCaredAt)
           : null,
-        careHistory: data.plant.careHistory.map((record: any) => ({
-          type: record.type,
+        careHistory: data.plant.careHistory.map((record) => ({
+          type: record.type as CareType,
           timestamp: new Date(record.timestamp),
         })),
         isMature: data.plant.isMature,
         isExchanged: data.plant.isExchanged,
       };
 
-      setSelectedPlant(plantType);
+      setSelectedPlant(newPlant.type);
       addPlant(newPlant);
+
+      // 식물 쿼리 캐시 무효화
+      const sessionId = getSessionId();
+      if (sessionId) {
+        queryClient.invalidateQueries({ queryKey: ["plant", sessionId] });
+      }
 
       // 키우기 페이지로 이동
       router.push("/grow");
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("식물 생성 오류:", error);
       alert(
         error instanceof Error
           ? error.message
           : "식물 생성에 실패했습니다. 다시 시도해주세요."
       );
-    } finally {
-      setIsLoading(false);
+    },
+  });
+
+  const handleSelectPlant = (plantType: PlantType) => {
+    const config = plants.find((p) => p.type === plantType);
+    if (!config) return;
+
+    const sessionId = getSessionId();
+    if (!sessionId) {
+      alert("세션 ID를 찾을 수 없습니다. 페이지를 새로고침해주세요.");
+      return;
     }
+
+    createPlantMutation.mutate({
+      sessionId,
+      type: plantType,
+      name: config.name,
+    });
   };
 
   return (
@@ -94,7 +97,7 @@ export function PlantSelectClient({ plants }: PlantSelectClientProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handleSelectPlant(plant.type)}
-          disabled={isLoading}
+          disabled={createPlantMutation.isPending}
           className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="text-6xl mb-4 text-center">
