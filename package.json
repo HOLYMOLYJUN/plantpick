@@ -9,9 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.17",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.19",
+    "framer-motion": "^12.26.2",
     "next": "16.1.2",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^4.3.5",
+    "zustand": "^5.0.10"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
