@@ -1,15 +1,49 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
 import { motion } from "framer-motion";
+import { getOrCreateSessionId, getSessionIdFromUrl } from "@/lib/session";
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { selectedPlant, getCurrentPlant } = usePlantStore();
 
   useEffect(() => {
+    // URL 파라미터에서 sessionId 확인 (있는 경우 사용)
+    const urlSessionId = getSessionIdFromUrl();
+    
+    // 세션 ID 초기화 및 서버 등록
+    const registerSession = async () => {
+      let sessionId: string;
+      
+      if (urlSessionId) {
+        // URL에 sessionId가 있으면 localStorage에 저장
+        sessionId = urlSessionId;
+        localStorage.setItem("plantpick-session-id", sessionId);
+      } else {
+        // 없으면 자동 생성
+        sessionId = getOrCreateSessionId();
+      }
+
+      // 서버에 세션 ID 등록
+      try {
+        await fetch("/api/sessions", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sessionId }),
+        });
+      } catch (error) {
+        console.error("세션 등록 오류:", error);
+      }
+    };
+
+    registerSession();
+
     // 이미 식물을 선택한 경우 키우기 페이지로 리다이렉트
     if (selectedPlant && getCurrentPlant()) {
       router.push("/grow");
