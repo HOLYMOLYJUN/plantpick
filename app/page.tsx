@@ -4,30 +4,32 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
 import { motion } from "framer-motion";
-import { getOrCreateSessionId, getSessionIdFromUrl } from "@/lib/session";
+import { getOrCreateSessionId, getSessionId, getSessionIdFromUrl } from "@/lib/session";
 
 export default function HomePage() {
   const router = useRouter();
   const { selectedPlant, getCurrentPlant } = usePlantStore();
 
   useEffect(() => {
-    // URL 파라미터에서 sessionId 확인 (있는 경우 사용)
-    const urlSessionId = getSessionIdFromUrl();
-    
     // 세션 ID 초기화 및 서버 등록
     const registerSession = async () => {
-      let sessionId: string;
+      // 1순위: localStorage에 저장된 기존 세션 ID 사용 (같은 기기에서 재방문 시)
+      let sessionId = getSessionId();
       
+      // 2순위: URL 파라미터에서 sessionId 확인 (QR 코드로 접속한 경우)
+      const urlSessionId = getSessionIdFromUrl();
       if (urlSessionId) {
-        // URL에 sessionId가 있으면 localStorage에 저장
         sessionId = urlSessionId;
+        // URL의 sessionId를 localStorage에 저장하여 다음 방문 시 재사용
         localStorage.setItem("plantpick-session-id", sessionId);
-      } else {
-        // 없으면 자동 생성
+      }
+      
+      // 3순위: 없으면 새로 생성
+      if (!sessionId) {
         sessionId = getOrCreateSessionId();
       }
 
-      // 서버에 세션 ID 등록
+      // 서버에 세션 ID 등록 (기존 세션이면 업데이트, 새 세션이면 생성)
       try {
         await fetch("/api/sessions", {
           method: "PUT",
