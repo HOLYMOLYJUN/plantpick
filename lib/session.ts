@@ -2,12 +2,57 @@
 
 /**
  * 세션 ID 관리 유틸리티
+ * 쿠키를 사용하여 세션 ID 저장 (30일 만료)
  */
 
-const SESSION_STORAGE_KEY = "plantpick-session-id";
+const SESSION_COOKIE_KEY = "plantpick-session-id";
+const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30일 (초 단위)
 
 /**
- * 세션 ID 가져오기 (없으면 생성)
+ * 쿠키 읽기 헬퍼
+ */
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+
+  return null;
+}
+
+/**
+ * 쿠키 저장 헬퍼
+ */
+function setCookie(name: string, value: string, maxAge: number): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const expires = new Date();
+  expires.setTime(expires.getTime() + maxAge * 1000);
+
+  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+}
+
+/**
+ * 쿠키 삭제 헬퍼
+ */
+function deleteCookie(name: string): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
+/**
+ * 세션 ID 가져오기 (없으면 생성 후 저장)
  */
 export function getOrCreateSessionId(): string {
   if (typeof window === "undefined") {
@@ -15,13 +60,13 @@ export function getOrCreateSessionId(): string {
     return "";
   }
 
-  // localStorage에서 기존 세션 ID 확인
-  let sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+  // 쿠키에서 기존 세션 ID 확인
+  let sessionId = getCookie(SESSION_COOKIE_KEY);
 
-  // 없으면 새로 생성
+  // 없으면 새로 생성하고 쿠키에 저장
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    setCookie(SESSION_COOKIE_KEY, sessionId, COOKIE_MAX_AGE);
   }
 
   return sessionId;
@@ -34,7 +79,19 @@ export function getSessionId(): string | null {
   if (typeof window === "undefined") {
     return null;
   }
-  return localStorage.getItem(SESSION_STORAGE_KEY);
+
+  return getCookie(SESSION_COOKIE_KEY);
+}
+
+/**
+ * 세션 ID 저장
+ */
+export function setSessionId(sessionId: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  setCookie(SESSION_COOKIE_KEY, sessionId, COOKIE_MAX_AGE);
 }
 
 /**
@@ -44,7 +101,8 @@ export function clearSessionId(): void {
   if (typeof window === "undefined") {
     return;
   }
-  localStorage.removeItem(SESSION_STORAGE_KEY);
+
+  deleteCookie(SESSION_COOKIE_KEY);
 }
 
 /**

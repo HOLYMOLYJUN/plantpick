@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getOrCreateSessionId, getSessionId, getSessionIdFromUrl } from "@/lib/session";
+import { getOrCreateSessionId, getSessionId, getSessionIdFromUrl, setSessionId } from "@/lib/session";
 import { registerSession, fetchPlant } from "@/lib/api";
 import { usePlantStore } from "@/stores/plant-store";
 import type { PlantType, CareType } from "@/types/plant";
@@ -16,23 +16,22 @@ export function PlantDataLoader() {
 
   // 세션 ID 결정
   const sessionId = useMemo(() => {
-    // 1순위: localStorage에 저장된 기존 세션 ID 사용
-    let id = getSessionId();
-    
-    // 2순위: URL 파라미터에서 sessionId 확인 (QR 코드로 접속한 경우)
+    // 1순위: URL 파라미터에서 sessionId 확인 (QR 코드로 접속한 경우)
     const urlSessionId = getSessionIdFromUrl();
     if (urlSessionId) {
-      id = urlSessionId;
-      // URL의 sessionId를 localStorage에 저장하여 다음 방문 시 재사용
-      localStorage.setItem("plantpick-session-id", id);
-    }
-    
-    // 3순위: 없으면 새로 생성
-    if (!id) {
-      id = getOrCreateSessionId();
+      // URL의 sessionId를 쿠키에 저장 (다음 방문 시 사용)
+      setSessionId(urlSessionId);
+      return urlSessionId;
     }
 
-    return id;
+    // 2순위: 쿠키에서 기존 세션 ID 가져오기
+    const cookieSessionId = getSessionId();
+    if (cookieSessionId) {
+      return cookieSessionId;
+    }
+
+    // 3순위: 없으면 새로 생성하고 쿠키에 저장
+    return getOrCreateSessionId();
   }, []);
 
   // 세션 등록 mutation
@@ -75,7 +74,7 @@ export function PlantDataLoader() {
         isExchanged: plantData.plant.isExchanged,
       };
       setSelectedPlant(plant.type);
-      
+
       // 이미 같은 ID의 식물이 있으면 업데이트, 없으면 추가
       const existingPlant = getCurrentPlant();
       if (existingPlant && existingPlant.id === plant.id) {

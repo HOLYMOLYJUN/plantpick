@@ -1,7 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { Plant, PlantType } from "@/types/plant";
 
 interface PlantState {
@@ -19,32 +18,26 @@ const initialState = {
   plants: [],
 };
 
-export const usePlantStore = create<PlantState>()(
-  persist(
-    (set, get) => ({
-      ...initialState,
-      setSelectedPlant: (plantType) => set({ selectedPlant: plantType }),
-      addPlant: (plant) =>
-        set((state) => ({
-          plants: [...state.plants, plant],
-        })),
-      updatePlant: (plantId, updates) =>
-        set((state) => ({
-          plants: state.plants.map((plant) =>
-            plant.id === plantId ? { ...plant, ...updates } : plant
-          ),
-        })),
-      getCurrentPlant: () => {
-        const state = get();
-        if (!state.selectedPlant) return null;
-        return (
-          state.plants.find((p) => p.type === state.selectedPlant) || null
-        );
-      },
-      reset: () => set(initialState),
-    }),
-    {
-      name: "plant-storage",
-    }
-  )
-);
+// Supabase에서 데이터를 가져오므로 localStorage persist 제거
+export const usePlantStore = create<PlantState>((set, get) => ({
+  ...initialState,
+  setSelectedPlant: (plantType) => set({ selectedPlant: plantType }),
+  addPlant: (plant) =>
+    set((state) => ({
+      plants: [...state.plants, plant],
+    })),
+  updatePlant: (plantId, updates) =>
+    set((state) => ({
+      plants: state.plants.map((plant) =>
+        plant.id === plantId ? { ...plant, ...updates } : plant
+      ),
+    })),
+  getCurrentPlant: () => {
+    const state = get();
+    if (!state.selectedPlant) return null;
+    return (
+      state.plants.find((p) => p.type === state.selectedPlant) || null
+    );
+  },
+  reset: () => set(initialState),
+}));
