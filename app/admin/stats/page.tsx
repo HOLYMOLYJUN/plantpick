@@ -247,7 +247,7 @@ export default function AdminStatsPage() {
                 {plantStats.typeStats && Object.keys(plantStats.typeStats).length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-700 mb-2">식물 타입별</p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-gray-700">
                       {plantStats.typeStats.sunflower && (
                         <div className="flex items-center justify-between p-2 bg-yellow-50 rounded">
                           <span className="text-sm">🌻 해바라기</span>

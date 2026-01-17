@@ -1,23 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlantStore } from "@/stores/plant-store";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
   const router = useRouter();
-  const { selectedPlant, getCurrentPlant } = usePlantStore();
+  const { getCurrentPlant } = usePlantStore();
+  const [hasPlant, setHasPlant] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
+  // 클라이언트에서만 식물 상태 확인 (hydration 에러 방지)
   useEffect(() => {
-    // 이미 식물을 선택한 경우 키우기 페이지로 리다이렉트
-    if (selectedPlant && getCurrentPlant()) {
-      router.push("/grow");
-    }
-  }, [selectedPlant, getCurrentPlant, router]);
+    setIsMounted(true);
+    setHasPlant(!!getCurrentPlant());
+  }, [getCurrentPlant]);
 
   const handleStart = () => {
-    router.push("/select");
+    if (hasPlant) {
+      router.push("/grow");
+    } else {
+      router.push("/select");
+    }
   };
 
   return (
@@ -76,7 +81,7 @@ export default function HomePage() {
           onClick={handleStart}
           className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg transition-colors"
         >
-          식물 선택하기
+          {isMounted && hasPlant ? "식물 이어서 돌봐주기" : "식물 선택하기"}
         </motion.button>
 
         {/* 안내 문구 */}
