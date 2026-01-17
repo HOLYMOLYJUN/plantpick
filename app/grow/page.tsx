@@ -87,8 +87,8 @@ export default function GrowPage() {
       {/* 플로팅 관리 버튼 - 하단 고정 */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pointer-events-none">
         <div className="max-w-2xl mx-auto flex flex-col items-center gap-3 pointer-events-auto">
-          {/* 관리 패널 토글 버튼 */}
-          {!plant.isExchanged && (
+          {/* 관리 패널 토글 버튼 - 성체가 아니고 교환 안됨일 때만 표시 */}
+          {!plant.isExchanged && !plant.isMature && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,10 @@ export default function GrowPage() {
                     <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">
                       케어하기
                     </h3>
-                    <CareButtons plantId={plant.id} />
+                    <CareButtons
+                      plantId={plant.id}
+                      onCareAdded={() => setShowManagePanel(false)}
+                    />
                   </div>
                 )}
 
