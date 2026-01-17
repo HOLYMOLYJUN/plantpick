@@ -23,14 +23,14 @@ export function CareButtons({ plantId, onCareAdded }: CareButtonsProps) {
     onSuccess: (data) => {
       // 식물 데이터 쿼리 캐시 무효화하여 최신 데이터 가져오기
       queryClient.invalidateQueries({ queryKey: ["plant"] });
-      
+
       // 성체가 되었는지 확인
       if (data.becameMature) {
         setToast({ message: "🎉 축하합니다! 식물이 성체가 되었습니다!", type: "success" });
       } else {
         setToast({ message: "케어가 완료되었습니다! 💚", type: "success" });
       }
-      
+
       onCareAdded?.();
     },
     onError: (error) => {
@@ -58,17 +58,17 @@ export function CareButtons({ plantId, onCareAdded }: CareButtonsProps) {
         {CARE_TYPES.map((careType, index) => (
           <motion.button
             key={careType.type}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleCare(careType.type)}
             disabled={careMutation.isPending}
-            className="relative flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-transparent hover:border-green-300"
+            className="relative flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-transparent hover:border-green-300"
           >
             <motion.div
-              className="text-5xl mb-2"
+              className="text-3xl mb-2"
               animate={{
                 scale: careMutation.isPending ? [1, 1.2, 1] : 1,
               }}
