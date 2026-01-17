@@ -36,7 +36,7 @@ export function CareProgress({ plant }: CareProgressProps) {
   );
 
   return (
-    <div className="space-y-4 mt-6">
+    <div className="space-y-4 mt-6 w-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold text-gray-800">케어 진행도</h3>
         {allCaresCompleted && !plant.isMature && (
@@ -91,13 +91,12 @@ export function CareProgress({ plant }: CareProgressProps) {
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className={`h-full rounded-full ${
-                  percentage === 100
-                    ? "bg-green-500"
-                    : percentage >= 50
+                className={`h-full rounded-full ${percentage === 100
+                  ? "bg-green-500"
+                  : percentage >= 50
                     ? "bg-blue-500"
                     : "bg-yellow-500"
-                }`}
+                  }`}
               />
               {isCompleted && (
                 <motion.div

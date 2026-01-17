@@ -50,10 +50,10 @@ export default function GrowPage() {
   }
 
   return (
-    <main className="h-[100dvh] relative bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
+    <main className="min-h-[100dvh] relative bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
       <div className="h-full flex flex-col items-center justify-center p-4">
         {/* 식물 정보 - 중앙 배치 */}
-        <div className="text-center mb-8">
+        <div className="text-center w-[90%] mx-auto">
           <PlantEmoji plant={plant} size="large" />
           <h2 className="text-2xl text-gray-800 font-bold mb-2">{plantConfig?.displayName || plant.name}</h2>
           <p className="text-gray-600 text-sm mb-6">
@@ -65,7 +65,7 @@ export default function GrowPage() {
           </p>
 
           {/* 케어 진행도 */}
-          <div className="max-w-md mx-auto">
+          <div className="w-full max-w-md mx-auto">
             <CareProgress plant={plant} />
           </div>
         </div>
